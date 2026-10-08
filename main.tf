@@ -2,10 +2,7 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# Bucket de logs sécurisé avec exclusions adaptées pour un lab
-# checkov:skip=CKV_AWS_144: "Réplication inter-régions non requise pour ce lab"
-# checkov:skip=CKV_AWS_145: "Chiffrement AES256 suffisant pour le stockage de logs de lab"
-# checkov:skip=CKV2_AWS_62: "Pas de notifications d'événements nécessaires sur les logs"
+# Bucket de logs dédié
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "mon-lab-securite-logs-issamneji"
 }
@@ -34,15 +31,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "log_encryption" {
   }
 }
 
-# Bucket principal sécurisé avec exclusions adaptées
-# checkov:skip=CKV_AWS_144: "Réplication inter-régions non requise pour ce lab"
-# checkov:skip=CKV_AWS_145: "Chiffrement AES256 suffisant pour le lab"
-# checkov:skip=CKV2_AWS_62: "Pas de notifications d'événements nécessaires"
+# Bucket principal sécurisé
 resource "aws_s3_bucket" "secure_bucket" {
   bucket = "mon-lab-securite-terraform-issamneji"
 }
 
-# Blocage de tous les accès publics
 resource "aws_s3_bucket_public_access_block" "example" {
   bucket                  = aws_s3_bucket.secure_bucket.id
   block_public_acls       = true
@@ -51,7 +44,6 @@ resource "aws_s3_bucket_public_access_block" "example" {
   restrict_public_buckets = true
 }
 
-# Chiffrement par défaut (AES256)
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
   bucket = aws_s3_bucket.secure_bucket.id
 
@@ -62,7 +54,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
   }
 }
 
-# Activation du Versionnage S3
 resource "aws_s3_bucket_versioning" "versioning_example" {
   bucket = aws_s3_bucket.secure_bucket.id
   versioning_configuration {
@@ -70,14 +61,12 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
   }
 }
 
-# Activation des logs d'accès
 resource "aws_s3_bucket_logging" "logging" {
   bucket        = aws_s3_bucket.secure_bucket.id
   target_bucket = aws_s3_bucket.log_bucket.id
   target_prefix = "log/"
 }
 
-# Configuration du cycle de vie
 resource "aws_s3_bucket_lifecycle_configuration" "lifecycle" {
   bucket = aws_s3_bucket.secure_bucket.id
 
@@ -88,10 +77,13 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle" {
     noncurrent_version_expiration {
       noncurrent_days = 90
     }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
   }
 }
 
-# Politique de compartiment pour exiger le HTTPS (TLS)
 resource "aws_s3_bucket_policy" "enforce_ssl" {
   bucket = aws_s3_bucket.secure_bucket.id
 
