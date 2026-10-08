@@ -241,6 +241,13 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "config_encryption
   }
 }
 
+# Ajout des logs pour le bucket de config (Correction de CKV_AWS_18)
+resource "aws_s3_bucket_logging" "config_logging" {
+  bucket        = aws_s3_bucket.config_bucket.id
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "config-log/"
+}
+
 resource "aws_config_configuration_recorder" "recorder" {
   name     = "lab-config-recorder"
   role_arn = aws_iam_role.config_role.arn
