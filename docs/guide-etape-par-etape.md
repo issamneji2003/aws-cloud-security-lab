@@ -1,45 +1,52 @@
-# Guide Détaillé : Secure Cloud Lab & Remédiation sur AWS Free Tier
+# 🛡️ AWS Cloud Security & DevSecOps Lab
 
-Ce guide détaille la mise en place, les erreurs intentionnelles et la remédiation de notre laboratoire de sécurité cloud sur AWS.
+![Terraform SecOps Pipeline](https://github.com/issamneji2003/aws-cloud-security-lab/actions/workflows/terraform.yml/badge.svg)
+![Checkov Compliance](https://img.shields.io/badge/checkov-passed-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-## Phase 1 : Création de l'Environnement Vulnérable (By Design)
-
-### 1.1 Configuration du Stockage (Amazon S3)
-- **Création du Compartiment** :
-  - Rendez-vous dans le service Amazon S3 de la console AWS.
-  - Cliquez sur *Créer un compartiment*.
-  - Nommez votre compartiment (ex: `mon-lab-securite-s3-issamneji`) dans la région `eu-north-1`.
-- **Introduction de la vulnérabilité** :
-  - Désactivez temporairement l'option *Bloquer tout accès public*.
-  - Téléchargez un fichier sensible fictif nommé `secret.txt`.
-  - Modifiez les permissions pour rendre l'objet accessible en lecture publique.
-
-### 1.2 Déploiement du Serveur (Amazon EC2)
-- **Lancement de l'instance** :
-  - Rendez-vous dans `EC2` → `Lancer des instances`.
-  - Nommez votre instance `serveur-vulnerable`.
-  - Choisissez une image éligible au Free Tier (`t2.micro` ou `t3.micro`).
-  - Créez et téléchargez une paire de clés SSH.
-- **Introduction de la vulnérabilité réseau (Groupe de Sécurité)** :
-  - Créez une règle entrante pour le protocole SSH (Port 22) en définissant la source sur N'importe où (`0.0.0.0/0`).
+Laboratoire professionnel de sécurité cloud, d'infrastructure as code (IaC) sécurisée, de conformité continue et d'auto-remédiation sur AWS.
 
 ---
 
-## Phase 2 : Sécurisation et Durcissement (Hardening)
-
-### 2.1 Sécurisation du Stockage S3
-- **Activation du Blocage Public** : Cochez *Bloquer tout accès public* dans l'onglet Autorisations.
-- **Chiffrement et Versioning** : Activez le chiffrement par défaut `SSE-S3` et la Gestion des versions.
-
-### 2.2 Sécurisation Réseau de l'Instance EC2
-- **Restriction du Groupe de Sécurité** : Remplacez la source `0.0.0.0/0` par ton IP de confiance (ex: `YOUR_PUBLIC_IP/32`) pour le port SSH[cite: 4].
-
-### 2.3 Mise en Place de la Journalisation (CloudTrail)
-- Créez un journal de suivi (Trail) nommé `mon-lab-trail` associé à un compartiment S3 pour enregistrer les événements de gestion.
+## 📑 Sommaire
+1. [Vue d'ensemble du projet](#-vue-densemble-du-projet)
+2. [Architecture & Composants Sécurisés](#-architecture--composants-sécurisés)
+3. [Pipeline CI/CD & DevSecOps](#-pipeline-cicd--devsecops)
+4. [Documentation & Guides du Lab](#-documentation--guides-du-lab)
+5. [Auto-Remédiation](#-auto-remédiation)
 
 ---
 
-## Phase 3 : Audit et Vérification via AWS CloudShell
-Ouvrez le terminal CloudShell et exécutez la commande suivante pour vérifier la configuration S3 :
-```bash
-aws s3api get-public-access-block --bucket mon-lab-securite-s3-issamneji
+## 🎯 Vue d'ensemble du projet
+Ce dépôt démontre une démarche complète de sécurisation d'une infrastructure cloud AWS en suivant les meilleures pratiques du secteur (CIS Benchmarks, Zero Trust) :
+- **Infrastructure as Code (IaC)** avec Terraform.
+- **Sécurité intégrée (Shift-Left)** via des analyses statiques automatisées (Checkov) dans GitHub Actions.
+- **Surveillance continue** via AWS Config.
+- **Réponse automatisée** aux incidents de configuration.
+
+---
+
+## 🏗️ Architecture & Composants Sécurisés
+* **Amazon S3** : Chiffrement côté serveur (AES-256), versioning actif, blocage strict des accès publics, journalisation (access logging) et politiques d'obligation HTTPS (`aws:SecureTransport`).
+* **Amazon EC2 & Réseau** : Instance durcie avec exigence stricte de l'**IMDSv2** (protection contre les SSRF), chiffrement des volumes EBS par défaut, et groupes de sécurité au moindre privilège (SSH restreint à une IP de confiance).
+* **AWS Config** : Enregistreur et règles d'audit permanent de la conformité des ressources.
+
+---
+
+## 🚀 Pipeline CI/CD & DevSecOps
+Chaque modification du code Terraform déclenche un pipeline GitHub Actions automatisé qui exécute :
+1. `terraform init` / `validate` / `plan`
+2. **Checkov** pour le scan de vulnérabilités et de conformité de l'IaC.
+
+---
+
+## 📚 Documentation & Guides du Lab
+Retrouvez l'ensemble des détails et preuves dans le dossier `docs/` :
+* [Guide Étape par Étape du Lab](docs/guide-etape-par-etape.md)
+* [Rapport de Preuves & Tests](docs/test-evidence.md)
+* [Guide de Remédiation](docs/remediation-guide.md)
+
+---
+
+## 🛡️ Auto-Remédiation
+Un script de réponse automatisée (`remediation/auto_remediate_s3.py`) est intégré pour détecter et corriger instantanément toute dérive de configuration critique sur les compartiments S3.
