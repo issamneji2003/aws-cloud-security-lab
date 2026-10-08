@@ -1,8 +1,8 @@
 provider "aws" {
-  region = "eu-north-1"
+  region = "us-east-1"
 }
 
-# 1. Création du compartiment S3 sécurisé dans la bonne région
+# 1. Création du compartiment S3 sécurisé
 resource "aws_s3_bucket" "secure_bucket" {
   bucket = "mon-lab-securite-terraform-issamneji"
 }
