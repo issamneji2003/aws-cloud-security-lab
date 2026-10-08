@@ -2,7 +2,10 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# 0. Bucket dédié pour recevoir les logs d'accès S3 (requis pour CKV_AWS_18)
+# Bucket de logs sécurisé avec exclusions adaptées pour un lab
+# checkov:skip=CKV_AWS_144: "Réplication inter-régions non requise pour ce lab"
+# checkov:skip=CKV_AWS_145: "Chiffrement AES256 suffisant pour le stockage de logs de lab"
+# checkov:skip=CKV2_AWS_62: "Pas de notifications d'événements nécessaires sur les logs"
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "mon-lab-securite-logs-issamneji"
 }
@@ -15,12 +18,31 @@ resource "aws_s3_bucket_public_access_block" "log_bucket_block" {
   restrict_public_buckets = true
 }
 
-# 1. Création du compartiment S3 principal sécurisé
+resource "aws_s3_bucket_versioning" "log_bucket_versioning" {
+  bucket = aws_s3_bucket.log_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "log_encryption" {
+  bucket = aws_s3_bucket.log_bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# Bucket principal sécurisé avec exclusions adaptées
+# checkov:skip=CKV_AWS_144: "Réplication inter-régions non requise pour ce lab"
+# checkov:skip=CKV_AWS_145: "Chiffrement AES256 suffisant pour le lab"
+# checkov:skip=CKV2_AWS_62: "Pas de notifications d'événements nécessaires"
 resource "aws_s3_bucket" "secure_bucket" {
   bucket = "mon-lab-securite-terraform-issamneji"
 }
 
-# 2. Blocage de tous les accès publics
+# Blocage de tous les accès publics
 resource "aws_s3_bucket_public_access_block" "example" {
   bucket                  = aws_s3_bucket.secure_bucket.id
   block_public_acls       = true
@@ -29,7 +51,7 @@ resource "aws_s3_bucket_public_access_block" "example" {
   restrict_public_buckets = true
 }
 
-# 3. Chiffrement par défaut (AES256)
+# Chiffrement par défaut (AES256)
 resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
   bucket = aws_s3_bucket.secure_bucket.id
 
@@ -40,7 +62,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
   }
 }
 
-# 4. Activation du Versionnage S3
+# Activation du Versionnage S3
 resource "aws_s3_bucket_versioning" "versioning_example" {
   bucket = aws_s3_bucket.secure_bucket.id
   versioning_configuration {
@@ -48,14 +70,14 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
   }
 }
 
-# 5. Activation des logs d'accès (Corrige CKV_AWS_18)
+# Activation des logs d'accès
 resource "aws_s3_bucket_logging" "logging" {
   bucket        = aws_s3_bucket.secure_bucket.id
   target_bucket = aws_s3_bucket.log_bucket.id
   target_prefix = "log/"
 }
 
-# 6. Configuration du cycle de vie (Corrige CKV_AWS_61)
+# Configuration du cycle de vie
 resource "aws_s3_bucket_lifecycle_configuration" "lifecycle" {
   bucket = aws_s3_bucket.secure_bucket.id
 
@@ -69,7 +91,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "lifecycle" {
   }
 }
 
-# 7. Politique de compartiment pour exiger le HTTPS (TLS)
+# Politique de compartiment pour exiger le HTTPS (TLS)
 resource "aws_s3_bucket_policy" "enforce_ssl" {
   bucket = aws_s3_bucket.secure_bucket.id
 
