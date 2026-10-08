@@ -1,11 +1,17 @@
 variable "aws_region" {
-  description = "La région AWS cible pour le déploiement"
+  description = "Région AWS pour le déploiement des ressources"
   type        = string
-  default     = "eu-north-1"
+  default     = "us-east-1"
 }
 
-variable "bucket_name" {
-  description = "Le nom unique du compartiment S3 sécurisé"
+variable "secure_bucket_name" {
+  description = "Nom du bucket S3 principal sécurisé"
   type        = string
   default     = "mon-lab-securite-terraform-issamneji"
+}
+
+variable "log_bucket_name" {
+  description = "Nom du bucket S3 dédié aux logs"
+  type        = string
+  default     = "mon-lab-securite-logs-issamneji"
 }

@@ -1,10 +1,10 @@
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
 }
 
 # Bucket de logs dédié
 resource "aws_s3_bucket" "log_bucket" {
-  bucket = "mon-lab-securite-logs-issamneji"
+  bucket = var.log_bucket_name
 }
 
 resource "aws_s3_bucket_public_access_block" "log_bucket_block" {
@@ -33,7 +33,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "log_encryption" {
 
 # Bucket principal sécurisé
 resource "aws_s3_bucket" "secure_bucket" {
-  bucket = "mon-lab-securite-terraform-issamneji"
+  bucket = var.secure_bucket_name
 }
 
 resource "aws_s3_bucket_public_access_block" "example" {

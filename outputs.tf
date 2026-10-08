@@ -1,9 +1,14 @@
-output "s3_bucket_arn" {
-  description = "L'ARN du compartiment S3 sécurisé"
+output "secure_bucket_arn" {
+  description = "ARN du bucket S3 principal"
   value       = aws_s3_bucket.secure_bucket.arn
 }
 
-output "s3_bucket_domain_name" {
-  description = "L'URL du compartiment S3"
+output "log_bucket_arn" {
+  description = "ARN du bucket S3 de logs"
+  value       = aws_s3_bucket.log_bucket.arn
+}
+
+output "secure_bucket_domain_name" {
+  description = "Nom de domaine du bucket principal"
   value       = aws_s3_bucket.secure_bucket.bucket_domain_name
 }
