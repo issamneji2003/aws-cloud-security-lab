@@ -23,15 +23,10 @@ Hands-on security engineering project demonstrating how to build an intentionall
 * **S3 Misconfiguration:** Created a storage bucket with public-read ACLs and policies containing sensitive data.
 * **EC2 Misconfiguration:** Deployed an EC2 instance with an inbound Security Group rule allowing SSH (port 22) from anywhere (`0.0.0.0/0`).
 
-### Phase 2: Security Hardening & Remediation
-1. **S3 Hardening:**
-   - Enabled **SSE-S3** encryption by default.
-   - Activated **Bucket Versioning** to protect against accidental deletion or modification.
-   - Applied **Block Public Access** settings to completely shut down public exposure.
-2. **Network Hardening:**
-   - Updated the EC2 Security Group inbound rule to replace `0.0.0.0/0` with a strict personal IP restriction (`YOUR_PUBLIC_IP/32`).
-3. **Auditing & Logging:**
-   - Deployed **AWS CloudTrail** (`mon-lab-trail`) to capture API activity and track administrative changes.
+### 🔒 Phase 2: Security Hardening & Remediation
+- **S3 Hardening**: Activated **Bucket Versioning**, enforced **AES-256 Server-Side Encryption**, blocked all public access, and configured strict SSL bucket policies (`aws:SecureTransport`).
+- **Network & Compute Hardening**: Configured an isolated EC2 instance running with **IMDSv2 required**, **EBS encryption**, **detailed CloudWatch monitoring**, and a hardened **Security Group** restricting SSH ingress strictly to `192.0.2.1/32`.
+- **Auditing & Logging**: Deployed secure S3 logging targets for tracking and compliance.
 
 ### Phase 3: Verification & CLI Audit
 Validated the security posture directly via AWS CloudShell using the AWS CLI:
@@ -49,7 +44,7 @@ To ensure the security controls are actively protecting the environment, the fol
 | **S3 Encryption** | Unencrypted objects permitted. | Server-Side Encryption forced (`AES256`). | `aws s3api get-bucket-encryption --bucket mon-lab-securite-terraform-issamneji`<br>👉 *Result: SSEAlgorithm applied by default.* |
 | **S3 HTTPS Enforcement** | HTTP plain text transfers allowed. | TLS explicitly enforced via bucket policy (`Deny` if `aws:SecureTransport` is false). | Tested via curl / policy evaluation.<br>👉 *Result: Non-secure requests denied with `403 Access Denied`.* |
 | **CI/CD Compliance** | Pipeline blocked by strict Checkov rules. | Automated compliance validated via GitHub Actions. | GitHub Actions Pipeline Status<br>👉*Result: **Passed (Green)**.* |
-
+| **EC2 Security Group** | Inbound SSH open to all (`0.0.0.0/0`). | Inbound SSH strictly restricted to trusted IP (`192.0.2.1/32`) and IMDSv2 enforced. | `aws ec2 describe-security-groups --group-ids <sg-id>`<br>👉 *Result: Restricted CIDR and secure metadata tokens required.* |
 ---
 
 ## 🚀 Deployment Guide
