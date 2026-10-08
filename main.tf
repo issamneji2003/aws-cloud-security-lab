@@ -185,4 +185,69 @@ resource "aws_instance" "secure_ec2" {
     Name        = "serveur-securise"
     Environment = "Lab"
   }
+# -----------------------------------------------------------------------------
+# DÉTECTION AUTOMATISÉE & AUDIT (AWS Config - Requis pour la conformité SOC)
+# -----------------------------------------------------------------------------
+
+# Rôle IAM nécessaire pour qu'AWS Config puisse auditer le compte
+resource "aws_iam_role" "config_role" {
+  name = "aws_config_audit_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "config.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "config_role_policy" {
+  role       = aws_iam_role.config_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
+}
+
+# Configuration Recorder pour surveiller les changements de ressources
+resource "aws_config_configuration_recorder" "recorder" {
+  name     = "lab-config-recorder"
+  role_arn = aws_iam_role.config_role.arn
+
+  recording_group {
+    all_supported = true
+    include_global_resource_types = true
+  }
+}
+
+# S3 bucket dédié pour stocker les rapports d'évaluation d'AWS Config
+resource "aws_s3_bucket" "config_bucket" {
+  bucket = "mon-lab-config-bucket-${var.aws_region}"
+}
+
+resource "aws_config_delivery_channel" "channel" {
+  name           = "lab-config-delivery-channel"
+  s3_bucket_name = aws_s3_bucket.config_bucket.id
+  depends_on     = [aws_config_configuration_recorder.recorder]
+}
+
+resource "aws_config_configuration_recorder_status" "recorder_status" {
+  name       = aws_config_configuration_recorder.recorder.name
+  is_enabled = true
+  depends_on = [aws_config_delivery_channel.channel]
+}
+
+# Exemple de règle AWS Config : Vérifier que le chiffrement S3 est actif
+resource "aws_config_config_rule" "s3_bucket_server_side_encryption_enabled" {
+  name = "s3-bucket-server-side-encryption-enabled"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED"
+  }
+
+  depends_on = [aws_config_configuration_recorder_status.recorder_status]
 }
