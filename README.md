@@ -37,3 +37,24 @@ Hands-on security engineering project demonstrating how to build an intentionall
 Validated the security posture directly via AWS CloudShell using the AWS CLI:
 ```bash
 aws s3api get-public-access-block --bucket mon-lab-securite-s3-issamneji
+---
+
+## 🧪 Testing & Verification Scenarios
+
+To ensure the security controls are actively protecting the environment, the following test scenarios were executed via AWS CLI in AWS CloudShell.
+
+| Security Control | Initial State (Vulnerable) | Hardened State (Secure) | Verification Command & Result |
+| :--- | :--- | :--- | :--- |
+| **S3 Public Access** | Public ACLs and policies allowed. | All public access blocked (`BlockPublicAcls = true`). | `aws s3api get-public-access-block --bucket mon-lab-securite-terraform-issamneji`<br>👉 *Result: All flags set to `true`.* |
+| **S3 Encryption** | Unencrypted objects permitted. | Server-Side Encryption forced (`AES256`). | `aws s3api get-bucket-encryption --bucket mon-lab-securite-terraform-issamneji`<br>👉 *Result: SSEAlgorithm applied by default.* |
+| **S3 HTTPS Enforcement** | HTTP plain text transfers allowed. | TLS explicitly enforced via bucket policy (`Deny` if `aws:SecureTransport` is false). | Tested via curl / policy evaluation.<br>👉 *Result: Non-secure requests denied with `403 Access Denied`.* |
+| **CI/CD Compliance** | Pipeline blocked by strict Checkov rules. | Automated compliance validated via GitHub Actions. | GitHub Actions Pipeline Status<br>👉*Result: **Passed (Green)**.* |
+
+---
+
+## 🚀 Deployment Guide
+
+1. Clone the repository:
+   ```bash
+   git clone [https://github.com/issamneji2003/aws-cloud-security-lab.git](https://github.com/issamneji2003/aws-cloud-security-lab.git)
+   cd aws-cloud-security-lab
