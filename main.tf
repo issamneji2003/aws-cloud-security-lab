@@ -116,7 +116,7 @@ resource "aws_s3_bucket_policy" "enforce_ssl" {
 }
 
 # -----------------------------------------------------------------------------
-# SÉCURITÉ RÉSEAU & EC2 (Hardening & Checkov Compliance)
+# SÉCURITÉ RÉSEAU & IAM / EC2 (Hardening & Checkov Compliance)
 # -----------------------------------------------------------------------------
 
 resource "aws_security_group" "ec2_secure_sg" {
@@ -131,7 +131,6 @@ resource "aws_security_group" "ec2_secure_sg" {
     cidr_blocks = ["192.0.2.1/32"]
   }
 
-  # Sortie restreinte au port HTTPS (443) pour éviter l'alerte Checkov egress global
   egress {
     description = "HTTPS sortant securise"
     from_port   = 443
@@ -141,15 +140,38 @@ resource "aws_security_group" "ec2_secure_sg" {
   }
 }
 
+# Rôle IAM minimaliste pour l'instance (requis par Checkov CKV2_AWS_41)
+resource "aws_iam_role" "ec2_role" {
+  name = "ec2_secure_instance_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "ec2_secure_instance_profile"
+  role = aws_iam_role.ec2_role.name
+}
+
 resource "aws_instance" "secure_ec2" {
   ami                  = "ami-0c7217cdde317cfec"
   instance_type        = "t2.micro"
   ebs_optimized        = true
   monitoring           = true
+  iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
 
   vpc_security_group_ids = [aws_security_group.ec2_secure_sg.id]
 
-  # Forcer l'IMDSv2 (Metadata Service v1 désactivé)
   metadata_options {
     http_endpoint = "enabled"
     http_tokens   = "required"
