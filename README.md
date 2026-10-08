@@ -6,7 +6,7 @@ Hands-on security engineering project demonstrating how to build an intentionall
 ## Architecture & Resources
 - **Cloud Provider:** Amazon Web Services (AWS) (`eu-north-1` / `us-east-1`)
 - **Storage:** Amazon S3 (`mon-lab-securite-s3-issamneji`) configured with Server-Side Encryption (SSE-S3), bucket versioning, and strict public access blocking.
-- **Compute:** Amazon EC2 (`serveur-vulnerable`, instance ID `i-09acc999b769d5df`) with restricted SSH access.
+- **Compute:** Amazon EC2 (`serveur-vulnerable`, instance ID `i-0123456789abcdef0`) with restricted SSH access.
 - **Monitoring & Auditing:** AWS CloudTrail (`mon-lab-trail`) for centralized management event logging.
 
 ## Key Skills Demonstrated
@@ -29,7 +29,7 @@ Hands-on security engineering project demonstrating how to build an intentionall
    - Activated **Bucket Versioning** to protect against accidental deletion or modification.
    - Applied **Block Public Access** settings to completely shut down public exposure.
 2. **Network Hardening:**
-   - Updated the EC2 Security Group inbound rule to replace `0.0.0.0/0` with a strict personal IP restriction (`196.238.53.151/32`).
+   - Updated the EC2 Security Group inbound rule to replace `0.0.0.0/0` with a strict personal IP restriction (`192.0.2.1/32`).
 3. **Auditing & Logging:**
    - Deployed **AWS CloudTrail** (`mon-lab-trail`) to capture API activity and track administrative changes.
 
