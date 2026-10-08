@@ -140,7 +140,6 @@ resource "aws_security_group" "ec2_secure_sg" {
   }
 }
 
-# Rôle IAM minimaliste pour l'instance (requis par Checkov CKV2_AWS_41)
 resource "aws_iam_role" "ec2_role" {
   name = "ec2_secure_instance_role"
 
@@ -185,11 +184,12 @@ resource "aws_instance" "secure_ec2" {
     Name        = "serveur-securise"
     Environment = "Lab"
   }
+}
+
 # -----------------------------------------------------------------------------
-# DÉTECTION AUTOMATISÉE & AUDIT (AWS Config - Requis pour la conformité SOC)
+# DÉTECTION AUTOMATISÉE & AUDIT (AWS Config sécurisé pour Checkov)
 # -----------------------------------------------------------------------------
 
-# Rôle IAM nécessaire pour qu'AWS Config puisse auditer le compte
 resource "aws_iam_role" "config_role" {
   name = "aws_config_audit_role"
 
@@ -212,20 +212,43 @@ resource "aws_iam_role_policy_attachment" "config_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
 }
 
-# Configuration Recorder pour surveiller les changements de ressources
+# Bucket S3 dédié aux rapports Config (durci pour satisfaire Checkov)
+resource "aws_s3_bucket" "config_bucket" {
+  bucket = "mon-lab-config-bucket-issamneji"
+}
+
+resource "aws_s3_bucket_public_access_block" "config_bucket_block" {
+  bucket                  = aws_s3_bucket.config_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "config_bucket_versioning" {
+  bucket = aws_s3_bucket.config_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "config_encryption" {
+  bucket = aws_s3_bucket.config_bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 resource "aws_config_configuration_recorder" "recorder" {
   name     = "lab-config-recorder"
   role_arn = aws_iam_role.config_role.arn
 
   recording_group {
-    all_supported = true
+    all_supported                 = true
     include_global_resource_types = true
   }
-}
-
-# S3 bucket dédié pour stocker les rapports d'évaluation d'AWS Config
-resource "aws_s3_bucket" "config_bucket" {
-  bucket = "mon-lab-config-bucket-${var.aws_region}"
 }
 
 resource "aws_config_delivery_channel" "channel" {
@@ -240,7 +263,6 @@ resource "aws_config_configuration_recorder_status" "recorder_status" {
   depends_on = [aws_config_delivery_channel.channel]
 }
 
-# Exemple de règle AWS Config : Vérifier que le chiffrement S3 est actif
 resource "aws_config_config_rule" "s3_bucket_server_side_encryption_enabled" {
   name = "s3-bucket-server-side-encryption-enabled"
 
