@@ -2,7 +2,20 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# 1. Création du compartiment S3 sécurisé
+# 0. Bucket dédié pour recevoir les logs d'accès S3 (requis pour CKV_AWS_18)
+resource "aws_s3_bucket" "log_bucket" {
+  bucket = "mon-lab-securite-logs-issamneji"
+}
+
+resource "aws_s3_bucket_public_access_block" "log_bucket_block" {
+  bucket                  = aws_s3_bucket.log_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# 1. Création du compartiment S3 principal sécurisé
 resource "aws_s3_bucket" "secure_bucket" {
   bucket = "mon-lab-securite-terraform-issamneji"
 }
@@ -35,7 +48,28 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
   }
 }
 
-# 5. Politique de compartiment pour exiger le HTTPS (TLS)
+# 5. Activation des logs d'accès (Corrige CKV_AWS_18)
+resource "aws_s3_bucket_logging" "logging" {
+  bucket        = aws_s3_bucket.secure_bucket.id
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "log/"
+}
+
+# 6. Configuration du cycle de vie (Corrige CKV_AWS_61)
+resource "aws_s3_bucket_lifecycle_configuration" "lifecycle" {
+  bucket = aws_s3_bucket.secure_bucket.id
+
+  rule {
+    id     = "expire-old-versions"
+    status = "Enabled"
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+  }
+}
+
+# 7. Politique de compartiment pour exiger le HTTPS (TLS)
 resource "aws_s3_bucket_policy" "enforce_ssl" {
   bucket = aws_s3_bucket.secure_bucket.id
 
