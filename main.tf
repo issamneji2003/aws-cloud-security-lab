@@ -2,7 +2,10 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Bucket de logs dédié
+# -----------------------------------------------------------------------------
+# BUCKET DE LOGS S3
+# -----------------------------------------------------------------------------
+
 resource "aws_s3_bucket" "log_bucket" {
   bucket = var.log_bucket_name
 }
@@ -31,7 +34,10 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "log_encryption" {
   }
 }
 
-# Bucket principal sécurisé
+# -----------------------------------------------------------------------------
+# BUCKET PRINCIPAL SÉCURISÉ S3
+# -----------------------------------------------------------------------------
+
 resource "aws_s3_bucket" "secure_bucket" {
   bucket = var.secure_bucket_name
 }
@@ -107,4 +113,41 @@ resource "aws_s3_bucket_policy" "enforce_ssl" {
       }
     ]
   })
+}
+
+# -----------------------------------------------------------------------------
+# SÉCURITÉ RÉSEAU & EC2 (Hardening)
+# -----------------------------------------------------------------------------
+
+resource "aws_security_group" "ec2_secure_sg" {
+  name        = "ec2-secure-sg"
+  description = "Autoriser uniquement le SSH depuis une IP de confiance"
+
+  ingress {
+    description = "SSH securise"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["192.0.2.1/32"] # IP de documentation sécurisée
+  }
+
+  egress {
+    description = "Tout autoriser en sortie"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "secure_ec2" {
+  ami           = "ami-0c7217cdde317cfec"
+  instance_type = "t2.micro"
+
+  vpc_security_group_ids = [aws_security_group.ec2_secure_sg.id]
+
+  tags = {
+    Name        = "serveur-securise"
+    Environment = "Lab"
+  }
 }
