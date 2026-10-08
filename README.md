@@ -29,7 +29,7 @@ Hands-on security engineering project demonstrating how to build an intentionall
    - Activated **Bucket Versioning** to protect against accidental deletion or modification.
    - Applied **Block Public Access** settings to completely shut down public exposure.
 2. **Network Hardening:**
-   - Updated the EC2 Security Group inbound rule to replace `0.0.0.0/0` with a strict personal IP restriction (`192.0.2.1/32`).
+   - Updated the EC2 Security Group inbound rule to replace `0.0.0.0/0` with a strict personal IP restriction (`YOUR_PUBLIC_IP/32`).
 3. **Auditing & Logging:**
    - Deployed **AWS CloudTrail** (`mon-lab-trail`) to capture API activity and track administrative changes.
 
