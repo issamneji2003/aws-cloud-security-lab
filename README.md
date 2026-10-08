@@ -6,7 +6,7 @@ Hands-on security engineering project demonstrating how to build an intentionall
 ## Architecture & Resources
 - **Cloud Provider:** Amazon Web Services (AWS) (`eu-north-1` / `us-east-1`)
 - **Storage:** Amazon S3 (`mon-lab-securite-s3-issamneji`) configured with Server-Side Encryption (SSE-S3), bucket versioning, and strict public access blocking.
-- **Compute:** Amazon EC2 (`serveur-vulnerable`, instance ID `i-0123456789abcdef0`) with restricted SSH access.
+- **Compute:** Amazon EC2 (`serveur-vulnerable`, instance ID `i-0123456789abcdexx`) with restricted SSH access.
 - **Monitoring & Auditing:** AWS CloudTrail (`mon-lab-trail`) for centralized management event logging.
 
 ## Key Skills Demonstrated
@@ -25,7 +25,7 @@ Hands-on security engineering project demonstrating how to build an intentionall
 
 ### 🔒 Phase 2: Security Hardening & Remediation
 - **S3 Hardening**: Activated **Bucket Versioning**, enforced **AES-256 Server-Side Encryption**, blocked all public access, and configured strict SSL bucket policies (`aws:SecureTransport`).
-- **Network & Compute Hardening**: Configured an isolated EC2 instance running with **IMDSv2 required**, **EBS encryption**, **detailed CloudWatch monitoring**, and a hardened **Security Group** restricting SSH ingress strictly to `192.0.2.1/32`.
+- **Network & Compute Hardening**: Configured an isolated EC2 instance running with **IMDSv2 required**, **EBS encryption**, **detailed CloudWatch monitoring**, and a hardened **Security Group** restricting SSH ingress strictly to `YOUR_PUBLIC_IP/32`.
 - **Auditing & Logging**: Deployed secure S3 logging targets for tracking and compliance.
 
 ### Phase 3: Verification & CLI Audit
