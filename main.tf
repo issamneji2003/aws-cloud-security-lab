@@ -116,7 +116,7 @@ resource "aws_s3_bucket_policy" "enforce_ssl" {
 }
 
 # -----------------------------------------------------------------------------
-# SÉCURITÉ RÉSEAU & EC2 (Hardening)
+# SÉCURITÉ RÉSEAU & EC2 (Hardening & Checkov Compliance)
 # -----------------------------------------------------------------------------
 
 resource "aws_security_group" "ec2_secure_sg" {
@@ -128,23 +128,36 @@ resource "aws_security_group" "ec2_secure_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["192.0.2.1/32"] # IP de documentation sécurisée
+    cidr_blocks = ["192.0.2.1/32"]
   }
 
+  # Sortie restreinte au port HTTPS (443) pour éviter l'alerte Checkov egress global
   egress {
-    description = "Tout autoriser en sortie"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    description = "HTTPS sortant securise"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_instance" "secure_ec2" {
-  ami           = "ami-0c7217cdde317cfec"
-  instance_type = "t2.micro"
+  ami                  = "ami-0c7217cdde317cfec"
+  instance_type        = "t2.micro"
+  ebs_optimized        = true
+  monitoring           = true
 
   vpc_security_group_ids = [aws_security_group.ec2_secure_sg.id]
+
+  # Forcer l'IMDSv2 (Metadata Service v1 désactivé)
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  root_block_device {
+    encrypted = true
+  }
 
   tags = {
     Name        = "serveur-securise"
