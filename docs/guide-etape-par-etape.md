@@ -14,6 +14,7 @@ Laboratoire professionnel de sécurité cloud, d'infrastructure as code (IaC) s�
 3. [Pipeline CI/CD & DevSecOps](#-pipeline-cicd--devsecops)
 4. [Documentation & Guides du Lab](#-documentation--guides-du-lab)
 5. [Auto-Remédiation](#-auto-remédiation)
+6. [Modélisation des Menaces (Threat Modeling)](docs/threat-modeling.md)
 
 ---
 
